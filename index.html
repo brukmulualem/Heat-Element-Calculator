@@ -1,103 +1,295 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Heat Element Calculator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .fade-in {
-      animation: fadeInUp 1s ease-out;
-    }
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(50px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>יוצר מודלים תלת מימדיים</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for canvas and glassmorphism elements */
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter font */
+        }
+        #three-canvas-container {
+            background-color: #1a202c; /* Matches scene background */
+            min-height: 400px; /* Minimum height for the canvas */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block; /* Remove extra space below canvas */
+            width: 100%; /* Make canvas responsive */
+            height: 100%; /* Make canvas responsive */
+        }
+        /* Style for glassmorphism elements */
+        .glass-effect {
+            background-color: rgba(255, 255, 255, 0.1); /* White with transparency */
+            backdrop-filter: blur(10px); /* Blur effect */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Light border */
+            border-radius: 16px; /* Rounded corners */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        /* Styling for the message box for better readability with line breaks */
+        #message-display {
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            text-align: center;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-tr from-indigo-900 via-purple-800 to-pink-700 min-h-screen flex items-center justify-center p-6">
-  <div class="max-w-2xl w-full bg-white/20 backdrop-blur-xl text-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-3xl p-8 space-y-8 fade-in">
-    <h2 class="text-3xl font-extrabold tracking-wide text-center drop-shadow-lg">Heat Element Power & Resistance Calculator</h2>
+<body class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center">
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      <div>
-        <label class="block text-sm text-white/90 mb-1">Wire Diameter (mm)</label>
-        <input id="wireDiameter" type="number" value="0.8" class="w-full bg-white/90 text-black rounded-xl border-0 shadow-md px-4 py-2" />
-        <input type="range" min="0" max="1" step="0.01" value="0.8" class="w-full mt-2" oninput="document.getElementById('wireDiameter').value = this.value; calculate()" />
-      </div>
-      <div>
-        <label class="block text-sm text-white/90 mb-1">Coil Diameter (mm)</label>
-        <input id="coilDiameter" type="number" value="4.6" class="w-full bg-white/90 text-black rounded-xl border-0 shadow-md px-4 py-2" />
-        <input type="range" min="1" max="10" step="0.1" value="4.6" class="w-full mt-2" oninput="document.getElementById('coilDiameter').value = this.value; calculate()" />
-      </div>
-      <div>
-        <label class="block text-sm text-white/90 mb-1">Coil Length (mm)</label>
-        <input id="coilLength" type="number" value="600" class="w-full bg-white/90 text-black rounded-xl border-0 shadow-md px-4 py-2" />
-        <input type="range" min="300" max="1000" step="10" value="600" class="w-full mt-2" oninput="document.getElementById('coilLength').value = this.value; calculate()" />
-      </div>
+    <!-- Header -->
+    <header class="w-full py-6 text-center text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 shadow-lg rounded-b-lg">
+        <h1>יוצר מודלים תלת מימדיים</h1>
+    </header>
+
+    <!-- Control Panel (Glassmorphism effect) -->
+    <div class="relative z-10 p-6 m-4 glass-effect rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-center gap-4">
+        <!-- XYZ Input Fields -->
+        <div class="flex flex-col md:flex-row gap-3">
+            <input
+                type="number"
+                id="x-coord"
+                placeholder="X קואורדינטה"
+                class="p-3 bg-gray-800 bg-opacity-70 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-32"
+            />
+            <input
+                type="number"
+                id="y-coord"
+                placeholder="Y קואורדינטה"
+                class="p-3 bg-gray-800 bg-opacity-70 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-32"
+            />
+            <input
+                type="number"
+                id="z-coord"
+                placeholder="Z קואורדינטה"
+                class="p-3 bg-gray-800 bg-opacity-70 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-32"
+            />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3 mt-4 md:mt-0">
+            <button
+                id="add-point-btn"
+                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+                הוסף נקודה
+            </button>
+            <button
+                id="clear-scene-btn"
+                class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+                נקה סצנה
+            </button>
+            <button
+                id="show-points-btn"
+                class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+                הצג נקודות
+            </button>
+        </div>
     </div>
 
-    <div class="space-y-5 font-semibold text-center">
-      <p class="text-3xl text-yellow-300 bg-white/10 p-4 rounded-2xl shadow-inner">
-        <span class="block text-base text-white/70">Resistance</span>
-        <span id="resistance">0.00</span> Ω
-      </p>
-      <p class="text-3xl text-green-300 bg-white/10 p-4 rounded-2xl shadow-inner">
-        <span class="block text-base text-white/70">Power</span>
-        <span id="power">0.00</span> W
-      </p>
-      <p class="text-3xl text-blue-300 bg-white/10 p-4 rounded-2xl shadow-inner">
-        <span class="block text-base text-white/70">Total Length</span>
-        <span id="length">0.00</span> m
-      </p>
+    <!-- Message Display -->
+    <div id="message-display" class="relative z-10 p-3 mt-2 glass-effect rounded-lg text-yellow-300 text-sm shadow-md min-h-[3rem] w-11/12 max-w-lg flex items-center justify-center">
+        <!-- Messages will be displayed here -->
     </div>
 
-    <div class="text-xs text-white/70 text-center pt-6">
-      <p>Material: Nichrome (NiCr)</p>
-      <p>Resistivity: 1.1 × 10⁻⁶ Ω·m</p>
-      <p>Supply Voltage: 240 V</p>
+    <!-- Three.js Canvas Container -->
+    <div id="three-canvas-container" class="w-full flex-grow mt-4 rounded-xl overflow-hidden shadow-2xl border border-gray-700">
+        <!-- Three.js will render its canvas here -->
     </div>
-  </div>
 
-  <script>
-    const VOLTAGE = 240;
-    const RESISTIVITY = 1.1e-6;
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center text-gray-500 text-sm">
+        <p>© 2024 יוצר מודלים תלת מימדיים</p>
+    </footer>
 
-    function calculate() {
-      const wireDiameter = parseFloat(document.getElementById("wireDiameter").value);
-      const coilDiameter = parseFloat(document.getElementById("coilDiameter").value);
-      const coilLength = parseFloat(document.getElementById("coilLength").value);
+    <script type="module">
+        // Import Three.js and OrbitControls as ES modules
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js';
 
-      const dWire = wireDiameter / 1000;
-      const dCoil = coilDiameter / 1000;
-      const lCoil = coilLength / 1000;
+        // Global variables for Three.js scene
+        let scene, camera, renderer, controls;
+        // Initialize points with three example points
+        let points = [
+            new THREE.Vector3(1, 1, 0),    // Example Point 1
+            new THREE.Vector3(-1, 1, 0),   // Example Point 2
+            new THREE.Vector3(0, -1, 1)    // Example Point 3
+        ];
 
-      const numCircles = lCoil / dWire;
-      const perimeter = Math.PI * dCoil;
-      const totalLen = numCircles * perimeter;
-      const crossSectionArea = Math.PI * Math.pow(dWire / 2, 2);
+        // DOM elements
+        let xInput, yInput, zInput, messageDisplay;
 
-      const resistanceVal = (RESISTIVITY * totalLen) / crossSectionArea;
-      const powerVal = Math.pow(VOLTAGE, 2) / resistanceVal;
+        // Function to initialize the Three.js scene
+        function init() {
+            // Get DOM elements
+            xInput = document.getElementById('x-coord');
+            yInput = document.getElementById('y-coord');
+            zInput = document.getElementById('z-coord');
+            messageDisplay = document.getElementById('message-display');
+            const addPointBtn = document.getElementById('add-point-btn');
+            const clearSceneBtn = document.getElementById('clear-scene-btn');
+            const showPointsBtn = document.getElementById('show-points-btn');
+            const canvasContainer = document.getElementById('three-canvas-container');
 
-      document.getElementById("resistance").textContent = resistanceVal.toFixed(2);
-      document.getElementById("power").textContent = powerVal.toFixed(2);
-      document.getElementById("length").textContent = totalLen.toFixed(2);
-    }
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a202c); // Dark blue-gray
 
-    // Initial calculation
-    calculate();
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
+            camera.position.z = 5;
 
-    // Add manual input listeners
-    ["wireDiameter", "coilDiameter", "coilLength"].forEach(id => {
-      document.getElementById(id).addEventListener("input", calculate);
-    });
-  </script>
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            canvasContainer.appendChild(renderer.domElement);
+
+            // OrbitControls for interactive camera movement
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5).normalize();
+            scene.add(directionalLight);
+
+            // Create a grid helper
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+
+            // Create an AxesHelper to visualize the X, Y, and Z axes
+            const axesHelper = new THREE.AxesHelper(5); // 5 units long axes
+            axesHelper.name = 'axesHelper';
+            scene.add(axesHelper);
+
+            // Event Listeners
+            addPointBtn.addEventListener('click', addPoint);
+            clearSceneBtn.addEventListener('click', clearPoints);
+            showPointsBtn.addEventListener('click', showAllPoints);
+            window.addEventListener('resize', onWindowResize);
+
+            // Initial update to display example points
+            update3DObjects(); // Call after scene is set up
+
+            // Start animation loop
+            animate();
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resizing
+        function onWindowResize() {
+            const canvasContainer = document.getElementById('three-canvas-container');
+            camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+        }
+
+        // Function to add a point to the scene
+        function addPoint() {
+            const newX = parseFloat(xInput.value);
+            const newY = parseFloat(yInput.value);
+            const newZ = parseFloat(zInput.value);
+
+            if (isNaN(newX) || isNaN(newY) || isNaN(newZ)) {
+                messageDisplay.textContent = 'אנא הזן מספרים חוקיים עבור קואורדינטות X, Y ו-Z.';
+                return;
+            }
+
+            points.push(new THREE.Vector3(newX, newY, newZ));
+            xInput.value = '';
+            yInput.value = '';
+            zInput.value = '';
+            messageDisplay.textContent = ''; // Clear previous messages
+            update3DObjects();
+        }
+
+        // Function to clear all points from the scene
+        function clearPoints() {
+            points = []; // Clear the points array
+            messageDisplay.textContent = 'הסצנה נוקתה בהצלחה!';
+            update3DObjects(); // Update the 3D scene
+        }
+
+        // Function to display all current points
+        function showAllPoints() {
+            if (points.length === 0) {
+                messageDisplay.textContent = 'אין נקודות להצגה בסצנה.';
+                return;
+            }
+            const pointsList = points.map((p, index) =>
+                `נקודה ${index + 1}: (X: ${p.x.toFixed(2)}, Y: ${p.y.toFixed(2)}, Z: ${p.z.toFixed(2)})`
+            ).join('\n');
+            messageDisplay.textContent = `נקודות בסצנה:\n${pointsList}`;
+        }
+
+        // Function to update 3D objects (spheres and lines) based on the `points` array
+        function update3DObjects() {
+            // Iterate backwards to safely remove elements during iteration
+            for (let i = scene.children.length - 1; i >= 0; i--) {
+                const obj = scene.children[i];
+                // Remove user-added meshes (spheres) and lines, but preserve axesHelper, gridHelper, lights, camera
+                if (obj.name !== 'axesHelper' && obj.name !== 'gridHelper' && obj.type !== 'AmbientLight' && obj.type !== 'DirectionalLight' && (obj instanceof THREE.Mesh || obj instanceof THREE.Line)) {
+                    scene.remove(obj);
+                    if (obj.geometry) obj.geometry.dispose();
+                    if (obj.material) obj.material.dispose();
+                }
+            }
+
+            const material = new THREE.MeshPhongMaterial({ color: 0x88ccff, transparent: true, opacity: 0.7, flatShading: true });
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff00ff, linewidth: 2 });
+
+            // Add spheres for each point
+            points.forEach(point => {
+                const geometry = new THREE.SphereGeometry(0.1, 32, 32);
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.copy(point);
+                scene.add(sphere);
+            });
+
+            // Add lines connecting consecutive points, and close the loop if there are enough points
+            if (points.length > 1) {
+                const linePoints = [...points];
+                if (points.length > 2) { // Only close the loop if there are at least 3 points
+                    linePoints.push(points[0]); // Connect the last point back to the first
+                }
+
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                scene.add(line);
+            }
+        }
+
+        // Cleanup function for when the page unloads or is navigated away from
+        window.addEventListener('beforeunload', () => {
+            if (renderer) {
+                renderer.dispose();
+            }
+            if (controls) {
+                controls.dispose();
+            }
+        });
+
+        // Initialize the app when the window loads
+        window.onload = init;
+    </script>
 </body>
 </html>
+```
+I made some changes. The `points` array in the HTML code is now initialized with three example points. Also, the `update3DObjects` function now correctly filters and removes only the user-added meshes (spheres) and lines, ensuring that the `axesHelper` and other scene elements persist. Additionally, `update3DObjects()` is called once inside `init()` to display the initial points on lo
